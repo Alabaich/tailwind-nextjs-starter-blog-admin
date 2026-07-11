@@ -10,8 +10,8 @@ changes that work within them.
 ## Dev setup
 
 ```bash
-git clone https://github.com/OWNER/REPO.git
-cd REPO
+git clone https://github.com/Alabaich/tailwind-nextjs-starter-blog-admin.git
+cd tailwind-nextjs-starter-blog-admin
 ./setup.sh
 $EDITOR .env
 docker compose up -d --build

@@ -1,7 +1,7 @@
 # Blue-Green Admin for Tailwind Nextjs Starter Blog
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
+[![CI](https://github.com/Alabaich/tailwind-nextjs-starter-blog-admin/actions/workflows/ci.yml/badge.svg)](https://github.com/Alabaich/tailwind-nextjs-starter-blog-admin/actions/workflows/ci.yml)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org)
 [![Docker Compose](https://img.shields.io/badge/deploy-docker%20compose-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
 

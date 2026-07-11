@@ -15,7 +15,7 @@ Instead:
 1. Go to the **Security** tab of this repository
 2. Click **Report a vulnerability** (GitHub private vulnerability reporting)
 
-Or email **[INSERT CONTACT EMAIL]** directly.
+Or email **enjoyable.design@gmail.com** directly.
 
 We'll acknowledge reports within a few days and keep you updated while we
 investigate and fix.

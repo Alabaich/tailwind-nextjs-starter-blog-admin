@@ -1,0 +1,52 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "${BLOG_PORT:-8080}:80"
+      - "${ADMIN_PORT:-8081}:8081"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/upstream:/etc/caddy/upstream
+      - caddy_data:/data
+      - caddy_config:/config
+
+  admin:
+    build: ./admin
+    restart: unless-stopped
+    environment:
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - DEPLOY_TOKEN=${DEPLOY_TOKEN}
+      - DEPLOYER_URL=http://deployer:8000
+      - SITE_DIR=/site
+      - CONTENT_DIR=/site/data/blog
+      - UPLOAD_DIR=/site/public/static/images/uploads
+      - DB_PATH=/data/admin.db
+    volumes:
+      - ./site:/site
+      - admin_db:/data
+
+  deployer:
+    build: ./deployer
+    restart: unless-stopped
+    environment:
+      - DEPLOY_TOKEN=${DEPLOY_TOKEN}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/stack
+    working_dir: /stack
+
+  blog-blue:
+    build: ./site
+    restart: unless-stopped
+
+  blog-green:
+    build: ./site
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
+  admin_db:

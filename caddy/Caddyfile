@@ -1,0 +1,12 @@
+{
+	admin off
+}
+
+:80 {
+	encode gzip
+	import /etc/caddy/upstream/active.caddy
+}
+
+:8081 {
+	reverse_proxy admin:3000
+}

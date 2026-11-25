@@ -1,4 +1,4 @@
-FROM node:24-slim
+FROM node:25-slim
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 # git records content history inside the mounted site/ checkout.

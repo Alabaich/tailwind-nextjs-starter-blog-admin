@@ -5,22 +5,51 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build-admin:
+  admin:
+    name: Admin (typecheck, test, build)
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Install
-        working-directory: admin
-        run: npm install --no-audit --no-fund
-      - name: Build
-        working-directory: admin
-        run: npm run build
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
 
-  validate-compose:
+  deployer:
+    name: Deployer (typecheck, test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: deployer
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: deployer/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+
+  infra:
+    name: Infra (compose, Caddyfile, shell, images)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,3 +57,26 @@ jobs:
         run: |
           cp .env.example .env
           docker compose config -q
+      - name: Validate Caddyfile
+        run: |
+          mkdir -p /tmp/upstream
+          echo "reverse_proxy blog-blue:3000" > /tmp/upstream/active.caddy
+          docker run --rm \
+            -v "$PWD/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -v /tmp/upstream:/etc/caddy/upstream:ro \
+            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
+      - name: Lint setup.sh
+        run: shellcheck setup.sh
+      - name: Build admin and deployer images
+        run: |
+          docker build -t bluegreen-admin ./admin
+          docker build -t bluegreen-deployer ./deployer
+      - name: Deployer image boots and reports healthy
+        run: |
+          docker run -d --name deployer -e DEPLOY_TOKEN="$(openssl rand -hex 32)" bluegreen-deployer
+          for i in $(seq 1 20); do
+            [ "$(docker inspect -f '{{.State.Health.Status}}' deployer)" = healthy ] && exit 0
+            sleep 2
+          done
+          docker logs deployer
+          exit 1

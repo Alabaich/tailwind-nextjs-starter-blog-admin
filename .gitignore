@@ -3,3 +3,6 @@ site/
 node_modules/
 .next/
 *.db
+*.tsbuildinfo
+coverage/
+.DS_Store

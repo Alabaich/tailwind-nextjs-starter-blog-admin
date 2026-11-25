@@ -52,8 +52,12 @@ representing the community in public spaces.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the maintainers at **enjoyable.design@gmail.com**. All complaints
-will be reviewed and investigated promptly and fairly.
+reported to the maintainers privately through GitHub's
+[private reporting form](https://github.com/Alabaich/tailwind-nextjs-starter-blog-admin/security/advisories/new)
+(visible only to the maintainers), or, when the matter does not need to stay
+confidential, by opening an
+[issue](https://github.com/Alabaich/tailwind-nextjs-starter-blog-admin/issues/new).
+All complaints will be reviewed and investigated promptly and fairly.
 
 All maintainers are obligated to respect the privacy and security of the
 reporter of any incident.

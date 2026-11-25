@@ -2,28 +2,38 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
+    depends_on:
+      # The deployer seeds the upstream snippet Caddy imports at startup.
+      deployer:
+        condition: service_healthy
     ports:
-      - "${BLOG_PORT:-8080}:80"
-      - "${ADMIN_PORT:-8081}:8081"
+      - "${BLOG_BIND:-0.0.0.0}:${BLOG_PORT:-8080}:80"
+      # The admin is plain HTTP here, so it is published on loopback only by
+      # default. See "Production notes" in the README before changing this.
+      - "${ADMIN_BIND:-127.0.0.1}:${ADMIN_PORT:-8081}:8081"
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./caddy/upstream:/etc/caddy/upstream
+      - upstream_state:/etc/caddy/upstream:ro
       - caddy_data:/data
       - caddy_config:/config
 
   admin:
     build: ./admin
     restart: unless-stopped
+    init: true
+    security_opt:
+      - no-new-privileges:true
     environment:
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - SESSION_SECRET=${SESSION_SECRET}
-      - DEPLOY_TOKEN=${DEPLOY_TOKEN}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:?set ADMIN_EMAIL in .env}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      - SESSION_SECRET=${SESSION_SECRET:?run ./setup.sh to generate SESSION_SECRET}
+      - DEPLOY_TOKEN=${DEPLOY_TOKEN:?run ./setup.sh to generate DEPLOY_TOKEN}
       - DEPLOYER_URL=http://deployer:8000
       - SITE_DIR=/site
       - CONTENT_DIR=/site/data/blog
       - UPLOAD_DIR=/site/public/static/images/uploads
       - DB_PATH=/data/admin.db
+      - MAX_UPLOAD_MB=${MAX_UPLOAD_MB:-8}
     volumes:
       - ./site:/site
       - admin_db:/data
@@ -31,22 +41,36 @@ services:
   deployer:
     build: ./deployer
     restart: unless-stopped
+    init: true
+    security_opt:
+      - no-new-privileges:true
     environment:
-      - DEPLOY_TOKEN=${DEPLOY_TOKEN}
+      - DEPLOY_TOKEN=${DEPLOY_TOKEN:?run ./setup.sh to generate DEPLOY_TOKEN}
+      - STACK_DIR=/stack
+      - STATE_DIR=/state
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - .:/stack
+      # Read-only: the deployer only needs the compose file and build contexts.
+      - .:/stack:ro
+      - upstream_state:/state
     working_dir: /stack
 
   blog-blue:
     build: ./site
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
 
   blog-green:
     build: ./site
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
 
 volumes:
   caddy_data:
   caddy_config:
   admin_db:
+  # Which color is live (active.caddy) plus the deployer's rollback state.
+  # Runtime state, so it lives in a volume instead of the git working tree.
+  upstream_state:

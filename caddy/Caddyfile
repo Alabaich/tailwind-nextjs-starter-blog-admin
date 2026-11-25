@@ -1,12 +1,25 @@
 {
-	admin off
+	# `caddy reload` talks to the admin API, so it must stay enabled or the
+	# blue-green flip cannot happen. It is bound to loopback inside the
+	# container: nothing on the Docker network (or the host) can reach it.
+	admin localhost:2019
 }
 
+# Public blog. The upstream snippet lives in a volume owned by the deployer,
+# which rewrites it and reloads Caddy on every flip.
 :80 {
-	encode gzip
+	encode zstd gzip
 	import /etc/caddy/upstream/active.caddy
 }
 
+# Admin panel.
 :8081 {
+	encode zstd gzip
+	header -Server
+	# Hard cap for uploads, enforced before the admin buffers anything. Keep it
+	# above MAX_UPLOAD_MB (default 8).
+	request_body {
+		max_size 25MB
+	}
 	reverse_proxy admin:3000
 }

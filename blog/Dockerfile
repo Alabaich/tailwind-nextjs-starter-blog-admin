@@ -6,7 +6,7 @@
 #   3. `next build` uses a BuildKit cache mount for .next/cache, so incremental
 #      rebuilds after a new post take well under a minute on a small VPS.
 
-FROM node:20-slim
+FROM node:25-slim
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
